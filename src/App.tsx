@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { CreatePastePage } from './pages/CreatePastePage';
 import { ViewPastePage } from './pages/ViewPastePage';
-import './index.css';
 
 function App() {
   return (

@@ -45,16 +45,17 @@ export function ViewPastePage() {
 
   if (loading) {
     return (
-      <div className="page">
-        <p>Loading...</p>
+      <div className="mx-auto w-full max-w-[640px] rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">View paste</h1>
+        <p className="mt-2 text-sm text-slate-600">Loading paste…</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="page">
-        <h1>Error</h1>
+      <div className="mx-auto w-full max-w-[640px] rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Error</h1>
         <ErrorMessage message={error} />
       </div>
     );
@@ -62,8 +63,8 @@ export function ViewPastePage() {
 
   if (!paste) {
     return (
-      <div className="page">
-        <h1>Paste Not Found</h1>
+      <div className="mx-auto w-full max-w-[640px] rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Paste not found</h1>
         <ErrorMessage message="Paste not found" />
       </div>
     );
@@ -74,39 +75,57 @@ export function ViewPastePage() {
     return new Date(dateString).toLocaleString();
   };
 
+  const statusStyles: Record<string, string> = {
+    ACTIVE: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
+    VIEWED: 'bg-blue-50 text-blue-800 ring-blue-200',
+    EXPIRED: 'bg-slate-100 text-slate-700 ring-slate-200',
+    DELETED: 'bg-slate-100 text-slate-700 ring-slate-200',
+  };
+
+  const statusClass = statusStyles[paste.status] ?? 'bg-slate-100 text-slate-700 ring-slate-200';
+
   return (
-    <div className="page">
-      <h1>View Paste</h1>
-      
-      <div className="paste-info">
-        <div className="info-group">
-          <label>Content:</label>
-          <pre className="paste-content">{paste.content}</pre>
+    <div className="mx-auto w-full max-w-[640px] rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">View paste</h1>
+          <p className="mt-1 text-sm text-slate-600">Paste ID: <span className="font-mono text-slate-700">{paste.id}</span></p>
+        </div>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${statusClass}`}>
+          {paste.status}
+        </span>
+      </div>
+
+      <div className="mt-6 space-y-6">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-slate-700">Content</p>
+          <pre className="max-h-[420px] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-900">
+            {paste.content}
+          </pre>
         </div>
 
-        <div className="info-group">
-          <label>Current Views:</label>
-          <span>{paste.current_views}</span>
-        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-medium text-slate-500">Views</p>
+            <p className="mt-1 text-lg font-semibold text-slate-900">
+              {paste.current_views} <span className="text-sm font-medium text-slate-500">/ {paste.max_views}</span>
+            </p>
+          </div>
 
-        <div className="info-group">
-          <label>Max Views:</label>
-          <span>{paste.max_views}</span>
-        </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-medium text-slate-500">Expires</p>
+            <p className="mt-1 text-sm font-semibold text-slate-900">{formatDate(paste.expires_at)}</p>
+          </div>
 
-        <div className="info-group">
-          <label>Status:</label>
-          <span>{paste.status}</span>
-        </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-medium text-slate-500">Created</p>
+            <p className="mt-1 text-sm font-semibold text-slate-900">{formatDate(paste.created_at)}</p>
+          </div>
 
-        <div className="info-group">
-          <label>Expires At:</label>
-          <span>{formatDate(paste.expires_at)}</span>
-        </div>
-
-        <div className="info-group">
-          <label>Created At:</label>
-          <span>{formatDate(paste.created_at)}</span>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-medium text-slate-500">Updated</p>
+            <p className="mt-1 text-sm font-semibold text-slate-900">{formatDate(paste.updated_at)}</p>
+          </div>
         </div>
       </div>
     </div>
