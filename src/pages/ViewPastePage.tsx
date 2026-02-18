@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import { getPaste, ApiError } from '../api/client';
 import type { PasteResponse } from '../api/types';
@@ -9,6 +9,12 @@ export function ViewPastePage() {
   const [paste, setPaste] = useState<PasteResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  
+  // New state for password handling
+  const [isPasswordRequired, setIsPasswordRequired] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [submittingPassword, setSubmittingPassword] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -17,42 +23,135 @@ export function ViewPastePage() {
       return;
     }
 
-    const fetchPaste = async () => {
-      try {
-        const data = await getPaste(id);
-        setPaste(data);
-      } catch (err) {
-        if (err instanceof ApiError) {
-          if (err.status === 410) {
-            setError('Paste expired or unavailable');
-          } else if (err.status === 404) {
-            setError('Paste not found');
-          } else {
-            setError(err.message);
-          }
-        } else if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('Failed to load paste');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPaste();
+    // Initial fetch without password
+    loadPaste(id);
   }, [id]);
 
-  if (loading) {
+  const loadPaste = async (pasteId: string, password?: string) => {
+    try {
+      setLoading(true);
+      setError(null); // Clear previous errors (like invalid password)
+      
+      const data = await getPaste(pasteId, password);
+      
+      setPaste(data);
+      setIsPasswordRequired(false); // Success! No longer need password
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.status === 410) {
+          setError('Paste expired or unavailable');
+        } else if (err.status === 404) {
+          setError('Paste not found');
+        } else if (err.status === 401) {
+          // 401 means password required or invalid
+          setIsPasswordRequired(true);
+          // If we already sent a password, it was wrong
+          if (password) {
+            setError('Invalid password');
+          }
+        } else {
+          setError(err.message);
+        }
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to load paste');
+      }
+    } finally {
+      setLoading(false);
+      setSubmittingPassword(false);
+    }
+  };
+
+
+  const handleCopy = async () => {
+    if (!paste?.content) return;
+    setCopied(false);
+
+    try {
+      await navigator.clipboard.writeText(paste.content);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      try {
+        const input = document.createElement('input');
+        input.value = paste.content;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1500);
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  const handlePasswordSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!id) return;
+    
+    setSubmittingPassword(true);
+    loadPaste(id, passwordInput);
+  };
+
+  if (loading && !submittingPassword) {
     return (
       <div className="mx-auto w-full max-w-[640px] rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">View paste</h1>
-        <p className="mt-2 text-sm text-slate-600">Loading paste…</p>
+        <div className="mt-4 flex items-center justify-center py-8">
+           <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-600"></div>
+        </div>
       </div>
     );
   }
 
-  if (error) {
+  // Render Password Form if required and we don't have the paste yet
+  if (isPasswordRequired && !paste) {
+    return (
+      <div className="mx-auto w-full max-w-[640px] rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 flex items-center gap-2">
+          🔒 Password Required
+        </h1>
+        <p className="mt-2 text-sm text-slate-600">This paste is protected. Please enter the password to view it.</p>
+        
+        <form onSubmit={handlePasswordSubmit} className="mt-6">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium leading-6 text-slate-900">
+                Password
+              </label>
+              <div className="mt-2">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  className="block w-full resize-y rounded-xl border border-slate-300 bg-white px-4 py-3 font-mono text-sm leading-6 text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                />
+              </div>
+            </div>
+
+            {error && <ErrorMessage message={error} />}
+
+            <button
+              type="submit"
+              disabled={submittingPassword}
+              className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600 disabled:opacity-50"
+            >
+              {submittingPassword ? 'Unlocking...' : 'Unlock Paste'}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  // Generic Error State (for non-401 errors like 404/500)
+  if (error && !isPasswordRequired) {
     return (
       <div className="mx-auto w-full max-w-[640px] rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Error</h1>
@@ -62,14 +161,12 @@ export function ViewPastePage() {
   }
 
   if (!paste) {
-    return (
-      <div className="mx-auto w-full max-w-[640px] rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Paste not found</h1>
-        <ErrorMessage message="Paste not found" />
-      </div>
-    );
+    // Should generally be caught by loading or error states above
+    return null;
   }
 
+  // --- EXISTING RENDER LOGIC FOR SUCCESSFUL PASTE ---
+  
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Never';
     return new Date(dateString).toLocaleString();
@@ -98,7 +195,16 @@ export function ViewPastePage() {
 
       <div className="mt-6 space-y-6">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-700">Content</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-slate-700">Content</p>
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="cursor-pointer inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-100"
+            >
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+          </div>
           <pre className="max-h-[420px] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-900">
             {paste.content}
           </pre>

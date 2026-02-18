@@ -9,7 +9,8 @@ interface PasteFormProps {
 export function PasteForm({ onSubmit, isSubmitting = false }: PasteFormProps) {
   const [content, setContent] = useState('');
   const [maxViews, setMaxViews] = useState(1);
-  const [expiresInSeconds, setExpiresInSeconds] = useState<number | ''>('');
+  const [password, setPassword] = useState('');
+  const [expiresInSeconds, setExpiresInSeconds] = useState<number | ''>(300);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -21,16 +22,17 @@ export function PasteForm({ onSubmit, isSubmitting = false }: PasteFormProps) {
     await onSubmit({
       content,
       max_views: maxViews,
-      expires_at: expiresAt || null,
+      ...(expiresAt && { expires_at: expiresAt }),
+      ...(password && { password }),
     });
+
+    // Clear password from memory
+    setPassword("");
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <label htmlFor="content" className="text-sm font-medium text-slate-700">
-          Content
-        </label>
         <textarea
           id="content"
           value={content}
@@ -39,6 +41,19 @@ export function PasteForm({ onSubmit, isSubmitting = false }: PasteFormProps) {
           rows={10}
           className="block w-full resize-y rounded-xl border border-slate-300 bg-white px-4 py-3 font-mono text-sm leading-6 text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
           placeholder="Paste something..."
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="password" className="text-sm font-medium text-slate-700">
+          Password
+        </label>
+        <input
+          id="password"
+          type="text"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
         />
       </div>
 
@@ -58,20 +73,22 @@ export function PasteForm({ onSubmit, isSubmitting = false }: PasteFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="expires_in_seconds" className="text-sm font-medium text-slate-700">
-          Expires In (seconds, optional)
+        <label className="text-sm font-medium text-slate-700">
+          Expiration
         </label>
-        <input
-          id="expires_in_seconds"
-          type="number"
-          min="1"
+        <select
           value={expiresInSeconds}
           onChange={(e) => setExpiresInSeconds(e.target.value === '' ? '' : Number(e.target.value))}
           className="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
-        />
-        <p className="text-xs text-slate-500">
-          Leave empty for no expiry time.
-        </p>
+        >
+          <option value="">Never expire</option>
+          <option value="300">5 minutes</option>
+          <option value="900">15 minutes</option>
+          <option value="3600">1 hour</option>
+          <option value="21600">6 hours</option>
+          <option value="86400">24 hours</option>
+          <option value="604800">7 days</option>
+        </select>
       </div>
 
       <button

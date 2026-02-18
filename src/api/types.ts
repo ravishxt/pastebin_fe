@@ -15,6 +15,7 @@ export interface CreatePasteRequest {
   content: string;
   max_views: number;
   expires_at?: string | null;
+  password?: string | null;
 }
 
 export interface ErrorResponse {

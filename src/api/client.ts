@@ -33,7 +33,14 @@ export async function createPaste(body: CreatePasteRequest): Promise<PasteRespon
   return handleResponse<PasteResponse>(response);
 }
 
-export async function getPaste(id: string): Promise<PasteResponse> {
-  const response = await fetch(`${API_BASE_URL}/pastes/${id}`);
+export async function getPaste(id: string, password?: string): Promise<PasteResponse> {
+  const response = await fetch(`${API_BASE_URL}/pastes/${id}/view`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ password }),
+  });
+
   return handleResponse<PasteResponse>(response);
 }

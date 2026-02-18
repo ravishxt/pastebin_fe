@@ -94,7 +94,7 @@ export function CreatePastePage() {
               <button
                 type="button"
                 onClick={handleCopy}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                className="cursor-pointer inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-100"
               >
                 {copied ? 'Copied' : 'Copy'}
               </button>
@@ -115,7 +115,7 @@ export function CreatePastePage() {
             <button
               type="button"
               onClick={() => navigate(`/pastes/${pasteId}`)}
-              className="inline-flex flex-1 items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100"
+              className="cursor-pointer inline-flex flex-1 items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100"
             >
               View paste
             </button>
@@ -126,7 +126,7 @@ export function CreatePastePage() {
                 setStatus(null);
                 setCopied(false);
               }}
-              className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-100"
+              className="cursor-pointer inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-100"
             >
               Create another
             </button>
