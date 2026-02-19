@@ -50,7 +50,7 @@ export function PasteForm({ onSubmit, isSubmitting = false }: PasteFormProps) {
         </label>
         <input
           id="password"
-          type="text"
+          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
